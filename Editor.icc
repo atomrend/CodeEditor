@@ -1,0 +1,439 @@
+#ifndef INLINE_MACRO
+#ifdef INLINE
+#define INLINE_MACRO inline
+#else // INLINE
+#define INLINE_MACRO
+#endif // INLINE
+#endif // INLINE_MACRO
+
+INLINE_MACRO void
+Editor::closeDocument()
+{
+    Document *doc = (Document*) document();
+    unsigned int index = 0;
+
+    if (Document::count() == 1) {
+        new Document(QString());
+    }
+
+    while (index < ((unsigned int) Document::count())) {
+        if (doc == Document::document(index)) {
+            break;
+        }
+        ++index;
+    }
+
+    if (Document::count() == 0) {
+        index = 0;
+    } else if (index < ((unsigned int) Document::count()) - 1) {
+        ++index;
+    } else {
+        index = 0;
+    }
+    Document *nextDoc = Document::document(index);
+
+    setDocument(nextDoc);
+
+    // Change the document for any other editors that have this document open.
+    index = 0;
+    while (index < ((unsigned int) count())) {
+        if (((Document*) editor(index)->document()) == doc &&
+                editor(index) != this) {
+            editor(index)->setDocument(nextDoc);
+        }
+
+        ++index;
+    }
+
+    delete doc;
+
+    MainWindow::get().updateDocumentsMenu();
+    StatusBar::updateAllStatusBars();
+}
+
+INLINE_MACRO bool
+Editor::saveDocument()
+{
+    return ((Document*) document())->save();
+}
+
+INLINE_MACRO bool
+Editor::saveAsDocument(const QString& path)
+{
+    return ((Document*) document())->saveAs(path);
+}
+
+INLINE_MACRO void
+Editor::revertDocument()
+{
+    QTextCursor cursor = textCursor();
+    int position = cursor.position();
+    int scrollValue = verticalScrollBar()->value();
+
+    ((Document*) document())->open();
+
+    if (position < document()->characterCount()) {
+        cursor.setPosition(position);
+    } else {
+        cursor.movePosition(QTextCursor::End);
+    }
+    setTextCursor(cursor);
+    verticalScrollBar()->setValue(scrollValue);
+}
+
+INLINE_MACRO void
+Editor::setStatusBar(StatusBar* statusBar)
+{
+    statusBar_ = statusBar;
+    if (statusBar_) {
+        connect(statusBar, SIGNAL(documentSelected(int)),
+            this, SLOT(selectDocument(int)));
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::foregroundColor()
+{
+    return foregroundColor_;
+}
+
+INLINE_MACRO void
+Editor::setForegroundColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    foregroundColor_ = color;
+
+    while (iter != editors_.end()) {
+        QPalette pal((*iter)->palette());
+        pal.setColor(QPalette::Text, foregroundColor_);
+        (*iter)->setPalette(pal);
+
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::backgroundColor()
+{
+    return backgroundColor_;
+}
+
+INLINE_MACRO void
+Editor::setBackgroundColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    backgroundColor_ = color;
+
+    while (iter != editors_.end()) {
+        QPalette pal((*iter)->palette());
+        pal.setColor(QPalette::Base, backgroundColor_);
+        (*iter)->setPalette(pal);
+
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::nondocumentColor()
+{
+    return nondocumentColor_;
+}
+
+INLINE_MACRO void
+Editor::setNondocumentColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    nondocumentColor_ = color;
+
+    while (iter != editors_.end()) {
+        QPalette pal((*iter)->palette());
+        pal.setColor(QPalette::Background, nondocumentColor_);
+        (*iter)->setPalette(pal);
+
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::char80IndicatorColor()
+{
+    return char80Indicator_;
+}
+
+INLINE_MACRO void
+Editor::setChar80IndicatorColor(const QColor& color)
+{
+    char80Indicator_ = color;
+}
+
+INLINE_MACRO const QColor&
+Editor::highlightColor()
+{
+    return highlightColor_;
+}
+
+INLINE_MACRO void
+Editor::setHighlightColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    highlightColor_ = color;
+
+    while (iter != editors_.end()) {
+        QPalette pal((*iter)->palette());
+        pal.setColor(QPalette::Highlight, highlightColor_);
+        (*iter)->setPalette(pal);
+
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::currentLineColor()
+{
+    return currentLineColor_;
+}
+
+INLINE_MACRO void
+Editor::setCurrentLineColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    currentLineColor_ = color;
+
+    while (iter != editors_.end()) {
+        (*iter)->updateCursorPosition();
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::activeLineNumberForegroundColor()
+{
+    return activeLineNumberForegroundColor_;
+}
+
+INLINE_MACRO void
+Editor::setActiveLineNumberForegroundColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    activeLineNumberForegroundColor_ = color;
+
+    while (iter != editors_.end()) {
+        (*iter)->update();
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::inactiveLineNumberForegroundColor()
+{
+    return inactiveLineNumberForegroundColor_;
+}
+
+INLINE_MACRO void
+Editor::setInactiveLineNumberForegroundColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    inactiveLineNumberForegroundColor_ = color;
+
+    while (iter != editors_.end()) {
+        (*iter)->updateCursorPosition();
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::activeLineNumberBackgroundColor()
+{
+    return activeLineNumberBackgroundColor_;
+}
+
+INLINE_MACRO void
+Editor::setActiveLineNumberBackgroundColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    activeLineNumberBackgroundColor_ = color;
+
+    while (iter != editors_.end()) {
+        (*iter)->updateCursorPosition();
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::inactiveLineNumberBackgroundColor()
+{
+    return inactiveLineNumberBackgroundColor_;
+}
+
+INLINE_MACRO void
+Editor::setInactiveLineNumberBackgroundColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    inactiveLineNumberBackgroundColor_ = color;
+
+    while (iter != editors_.end()) {
+        (*iter)->updateCursorPosition();
+        ++iter;
+    }
+}
+
+INLINE_MACRO const QColor&
+Editor::lineNumberBorderColor()
+{
+    return lineNumberBorderColor_;
+}
+
+INLINE_MACRO void
+Editor::setLineNumberBorderColor(const QColor& color)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    lineNumberBorderColor_ = color;
+
+    while (iter != editors_.end()) {
+        (*iter)->updateCursorPosition();
+        ++iter;
+    }
+}
+
+INLINE_MACRO bool
+Editor::isLineNumberBorderEnabled()
+{
+    return lineNumberBorderEnabled_;
+}
+
+INLINE_MACRO void
+Editor::setLineNumberBorderEnabled(bool val)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    lineNumberBorderEnabled_ = val;
+
+    while (iter != editors_.end()) {
+        (*iter)->updateCursorPosition();
+        ++iter;
+    }
+}
+
+INLINE_MACRO bool
+Editor::isLineNumberEnabled()
+{
+    return lineNumberEnabled_;
+}
+
+INLINE_MACRO void
+Editor::setLineNumberEnabled(bool val)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    lineNumberEnabled_ = val;
+
+    while (iter != editors_.end()) {
+        (*iter)->updateCursorPosition();
+        ++iter;
+    }
+}
+
+INLINE_MACRO bool
+Editor::isSpaceForTab()
+{
+    return spaceForTab_;
+}
+
+INLINE_MACRO void
+Editor::setSpaceForTab(bool val)
+{
+    spaceForTab_ = val;
+}
+
+INLINE_MACRO bool
+Editor::wordWrap()
+{
+    return wordWrap_;
+}
+
+INLINE_MACRO void
+Editor::setWordWrap(bool val)
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+
+    wordWrap_ = val;
+
+    while (iter != editors_.end()) {
+        (*iter)->setWordWrapMode(wordWrap_ ? QTextOption::WordWrap :
+            QTextOption::NoWrap);
+        ++iter;
+    }
+}
+
+INLINE_MACRO int
+Editor::tabSize()
+{
+    return tabSize_;
+}
+
+INLINE_MACRO void
+Editor::setTabSize(int size)
+{
+    tabSize_ = size;
+}
+
+INLINE_MACRO const QFont&
+Editor::editorFont()
+{
+    return font_;
+}
+
+INLINE_MACRO void
+Editor::updateAllEditors()
+{
+    QVector<Editor*>::iterator iter = editors_.begin();
+    while (iter != editors_.end()) {
+        (*iter)->update();
+        (*iter)->updateLineNumberAreaWidth(0);
+        ++iter;
+    }
+}
+
+INLINE_MACRO Editor*
+Editor::activeEditor()
+{
+    return activeEditor_;
+}
+
+INLINE_MACRO void
+Editor::setActiveEditor(Editor* editor)
+{
+    if (editor) {
+        activeEditor_ = editor;
+        activeEditor_->setFocus();
+    }
+}
+
+INLINE_MACRO int
+Editor::count()
+{
+    return editors_.count();
+}
+
+INLINE_MACRO Editor*
+Editor::editor(int index)
+{
+    Editor *result = NULL;
+
+    if (index >= 0 && index < count()) {
+        result = editors_.at(index);
+    }
+
+    return result;
+}
+

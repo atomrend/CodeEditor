@@ -1,0 +1,155 @@
+#ifndef INLINE_MACRO
+#ifdef INLINE
+#define INLINE_MACRO inline
+#else // INLINE
+#define INLINE_MACRO
+#endif // INLINE
+#endif // INLINE_MACRO
+
+INLINE_MACRO bool
+Document::needToSave() const
+{
+    return needToSave_;
+}
+
+INLINE_MACRO QString
+Document::name() const
+{
+    return metaInformation(QTextDocument::DocumentTitle);
+}
+
+INLINE_MACRO void
+Document::setName(const QString& name)
+{
+    setMetaInformation(QTextDocument::DocumentTitle, name);
+}
+
+INLINE_MACRO QString
+Document::path() const
+{
+    return metaInformation(QTextDocument::DocumentUrl);
+}
+
+INLINE_MACRO void
+Document::setPath(const QString& path)
+{
+    setMetaInformation(QTextDocument::DocumentUrl, path);
+}
+
+INLINE_MACRO const QString&
+Document::category() const
+{
+    return category_;
+}
+
+INLINE_MACRO void
+Document::setCategory(const QString& category)
+{
+    category_ = category;
+    rehighlightSyntax();
+}
+
+INLINE_MACRO int
+Document::cursorPosition(Editor* editor) const
+{
+    int result = 0;
+
+    if (editor && cursorPosition_.contains(editor)) {
+        result = cursorPosition_.value(editor);
+    }
+
+    return result;
+}
+
+INLINE_MACRO void
+Document::setCursorPosition(Editor* editor, const int pos)
+{
+    cursorPosition_.insert(editor, pos);
+}
+
+INLINE_MACRO int
+Document::scrollBarPosition(Editor* editor) const
+{
+    int result = 0;
+
+    if (editor && scrollBarPosition_.contains(editor)) {
+        result = scrollBarPosition_.value(editor);
+    }
+
+    return result;
+}
+
+INLINE_MACRO void
+Document::setScrollBarPosition(Editor* editor, const int pos)
+{
+    scrollBarPosition_.insert(editor, pos);
+}
+
+INLINE_MACRO const QString&
+Document::remotePath() const
+{
+    return remotePath_;
+}
+
+INLINE_MACRO void
+Document::setRemotePath(const QString& remotePath)
+{
+    remotePath_ = remotePath;
+}
+
+INLINE_MACRO bool
+Document::remoteSaveSuccessful() const
+{
+    return remoteSaveSuccessful_;
+}
+
+INLINE_MACRO void
+Document::setRemoveSaveSuccessful(bool status)
+{
+    remoteSaveSuccessful_ = status;
+}
+
+INLINE_MACRO void
+Document::rehighlightSyntaxAllDocuments()
+{
+    for (int index = 0; index < count(); ++index) {
+        documents_.value(index)->rehighlightSyntax();
+    }
+}
+
+INLINE_MACRO const QStringList&
+Document::extensions(const QString& category)
+{
+    return extensions_[category];
+}
+
+INLINE_MACRO void
+Document::setExtensions(const QString& category, const QStringList& extensions)
+{
+    extensions_.insert(category, extensions);
+}
+
+INLINE_MACRO void
+Document::clearExtensions()
+{
+    extensions_.clear();
+}
+
+INLINE_MACRO int
+Document::count()
+{
+    return documents_.size();
+}
+
+INLINE_MACRO Document*
+Document::document(int index)
+{
+    Document *result = NULL;
+    if (index >= 0 && index < count()) {
+        result = documents_.at(index);
+    }
+
+    return result;
+}
+
+
